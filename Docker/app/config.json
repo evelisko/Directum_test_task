@@ -1,0 +1,6 @@
+{
+	"INP_SIZE": 224,
+	"trash_hold": 0.5,
+	"model_path": "./app/models/model.h5",
+	"loger_patch": "./app/models/app_log.log"
+}
