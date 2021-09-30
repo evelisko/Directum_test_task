@@ -40,20 +40,14 @@ class ImageOperations():
 # Пересичитатьих позицию на исходном изображении.
 # Вывести ответ в виде словаря.
 
-# def read_image(path):
-#     return cv2.cvtColor(cv2.imread(str(path)), cv2.COLOR_BAYER_BG2GRAY)
-#==========================================================================
-
     def create_mask(self, bb, x, class_index):
         """Создаем маску для bounding box'a такого же шейпа как и изображение"""
         rows,cols, _ = x.shape
-        y_ind = np.zeros((rows, cols)) # Нужно больше каналов.
-        # y_cat = np.zeros((rows, cols , len(class_names)-1))
+        y_ind = np.zeros((rows, cols)) 
         bb = bb.astype(np.int)
 
         if class_index > 0:
-            y_ind[bb[1]:bb[3]+bb[1],bb[0]: bb[2]+bb[0]] = class_index # У нас два класса. И, для каждого из них нужно сделать маску.
-            # y_cat[bb[1]:bb[3]+bb[1],bb[0]: bb[2]+bb[0], class_index-1] = 1
+            y_ind[bb[1]:bb[3]+bb[1],bb[0]: bb[2]+bb[0]] = class_index 
         return y_ind
 
     def create_bb_array(self, x,class_index):
@@ -64,7 +58,6 @@ class ImageOperations():
             res = np.array([x[0],x[1],x[2],x[3]])      
         return res
 
-    #=========================================================================
     def mask_to_bb(self, mask):
         """Конвертируем маску Y в bounding box'a, принимая 0 как фоновый ненулевой объект """
         # bbx = []
@@ -80,18 +73,6 @@ class ImageOperations():
             bb = [top_row, left_col, bottom_row-top_row, right_col-left_col]
         return np.array(bb, dtype=np.float32)
 
-    #========================================================================================
-    # def resize_image_bb(self, img_size, img_new_size, bb):
-    #     ''''''
-    #     width, height =  img_size[0], img_size[1]
-    #     new_width, new_height  = img_new_size[0], img_new_size[1]
-    #     height_scale = new_height/height
-    #     width_scale = new_width/width
-    #     bb[0] *= width_scale 
-    #     bb[1] *= height_scale
-    #     bb[2] *= width_scale
-    #     bb[3] *= height_scale
-    #     return bb 
 
     def calc_window_coords(self):
         '''Вычисляет координаты квадратных областей, (кусков) на которые будет 
@@ -122,8 +103,6 @@ class ImageOperations():
         img_combined = np.concatenate([img, mask[..., None]], axis=2)
         X_batch=[]
         y_batch=[]
-        # print(self.windows_coords)
-        # print(len(self.windows_coords))
         for coord in self.windows_coords:
             combined = img_combined[coord[0]:(coord[0]+coord[2]), coord[1]:(coord[1]+coord[3])]
             X_batch.append(combined[...,:3])
@@ -142,10 +121,7 @@ class ImageOperations():
     def image_prepare(self, image, target_img_size):
         '''Подготавливает изображение к отправке его в нейронную сеть.'''
         try:
-            # image = np.array(image)
-            
             image = cv2.cvtColor((image).astype(np.uint8), cv2.COLOR_BGR2RGB)
-            
             image = cv2.resize(image, target_img_size)
             image = np.array(image, dtype=np.float32)/255.0
             print("split image")
@@ -177,6 +153,8 @@ class ImageOperations():
                 print('score: ', scores[i],'box: ',box)
              # Огромный костыль. т.к. модель не очень хорошо умеет локацию подписей. Поэтому, нужно немного ей помочь.
                 if(class_name=='sign') and (box[1]< self.target_img_size[1]/2): # это условие работает, только для подписей. для логотипов оно не корректно.
+                    continue
+                if(class_name=='logo') and (box[1]> self.target_img_size[1]/2): # это условие работает, только для подписей. для логотипов оно не корректно.
                     continue
                 
                 top_row = box[0] if box[0] < top_row else top_row

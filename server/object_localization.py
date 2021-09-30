@@ -1,11 +1,7 @@
-# import dill
-# import flask
 import pandas as pd
 from sklearn.metrics.pairwise import sigmoid_kernel
 import tensorflow as tf
 import cv2
-# import matplotlib.pyplot as plt
-# import imageio
 from logger import Logger
 import numpy as np
 import os
@@ -14,7 +10,7 @@ from PIL import Image
 
 class ObjectLocalization():
 
-    def __init__(self, model_path_logo, model_path_sign, classes_path, logger, win_size, target_image_size, threshold): # Написать стоит и други процедуры после инициализации.
+    def __init__(self, model_path_logo, model_path_sign, class_names, logger, win_size, target_image_size, threshold): # Написать стоит и други процедуры после инициализации.
         os.environ['CUDA_VISIBLE_DEVICES'] = '' 
 
         self.target_image_size = target_image_size
@@ -29,9 +25,7 @@ class ObjectLocalization():
         self.orign_width = 0
         self.orign_height = 0
 
-        with open(classes_path, 'r', encoding='utf-8') as f_obj:
-            self.class_names = f_obj.read().splitlines()
-        
+        self.class_names= class_names
         print('ObjectLocalization initialize')
         self.logger.write('ObjectLocalization initialize')
 
@@ -61,8 +55,6 @@ class ObjectLocalization():
             position['type']= class_name  
             position['position'] = {'left':bbx[0],'top':bbx[1],'width':bbx[2],'height':bbx[3]} # координаты объекта
             position['source'] = {'width':self.orign_width, 'height': self.orign_height}
-            # print(position)
-            # log.write(position)
         return position 
 
 
@@ -75,23 +67,24 @@ class ObjectLocalization():
             self.orign_width, self.orign_height = image.shape[0], image.shape[1] 
             print(image.shape[0], image.shape[1], self.target_image_size )
             image_list = self.image_operations.image_prepare(image, self.target_image_size)
-            print(self.class_names)
+
             pred = self.model_logo.predict(image_list)
             position = self.predict_interpretation(pred, self.class_names[0])
             if position != {}:
                 object_list.append(position)
                 self.logger.write(f'{position}')
-            
-            # pred = self.model_sign.predict(image_list)     
-            # position = self.predict_interpretation(pred, self.class_names[1])
-            # if position != {}:
-            #     object_list.append(position)    
+
+            image_list = self.image_operations.image_prepare(image, self.target_image_size)
+            pred = self.model_sign.predict(image_list)     
+            position = self.predict_interpretation(pred, self.class_names[1])
+            if position != {}:
+                object_list.append(position)    
 
         except Exception as e:
             self.logger.write(f'Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
             print(f'Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
 
-        if object_list=={}:                 # если словарь все еще пуст - возвращаем 'void'  
+        if object_list=={}:    # если словарь все еще пуст - возвращаем 'void'  
                 object_list.append({'type': 'void'})
                 print('Изображение не содержит ни логотипов ни подписей')
         return object_list
@@ -105,7 +98,6 @@ if __name__ == "__main__":
     model_path_logo = os.path.join(file_dir,'models/model_logo.h5')
     model_path_sign = os.path.join(file_dir,'models/model_sign.h5')
     loger_patch = os.path.join(file_dir,'server/log')
-    # img = Image.open(os.path.join(file_dir,'images/obh31f00_3.tif'))
     img = Image.open(os.path.join(file_dir,'images/nuz52d00.tif'))
     win_size=64
     threshold=0.5

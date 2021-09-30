@@ -1,10 +1,9 @@
 {
-	"win_size_logo": 224,
-	"win_size_sign": 64,
+	"class_names": ["logo", "sign"],
+	"win_size": 224,
 	"target_image_size": [600, 800],
 	"threshold": 0.5,
 	"model_path_logo": "models/model_logo.h5",
 	"model_path_sign": "models/model_sign.h5",
-	"class_names": "models/class_names.txt",
 	"loger_patch": "server/app_log.log"
 }
