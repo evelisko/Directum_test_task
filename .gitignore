@@ -1,6 +1,6 @@
 pages/*
 .idea/*
+models/*
 */__pycache__/*
-*/models/*
-food-images/*
 __pycache__/*
+*/models/*

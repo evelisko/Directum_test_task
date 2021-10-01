@@ -1,33 +1,41 @@
-import pandas as pd
-from sklearn.metrics.pairwise import sigmoid_kernel
 import tensorflow as tf
-import cv2
 from logger import Logger
-import numpy as np
+# import numpy as np
 import os
+import json
 import image_operations
 from PIL import Image
+import IoU
 
 class ObjectLocalization():
 
-    def __init__(self, model_path_logo, model_path_sign, class_names, logger, win_size, target_image_size, threshold): # Написать стоит и други процедуры после инициализации.
-        os.environ['CUDA_VISIBLE_DEVICES'] = '' 
-
-        self.target_image_size = target_image_size
-        self.threshold = threshold  
-
-        # Загрузим модель.
-        self.model_logo = tf.keras.models.load_model(model_path_logo)
-        self.model_sign = tf.keras.models.load_model(model_path_sign)
-
+    def __init__(self, config_patch, logger): # Написать стоит и други процедуры после инициализации.
+        os.environ['CUDA_VISIBLE_DEVICES'] = ''
         self.logger = logger
-        self.image_operations = image_operations.ImageOperations(win_size, target_image_size,logger)
-        self.orign_width = 0
-        self.orign_height = 0
+        try:
+            
+            with open(config_patch, 'r', encoding='utf8') as f:
+                config = json.load(f)
+                self.class_names = config['class_names']
+                model_path_logo = config['model_patch_logo']
+                model_path_sign = config['model_patch_sign']
+                self.target_image_size = config['target_image_size']
+                self.min_object_size = config['min_object_size']
+                self.threshold = config['threshold']  
+            print('Load models')
+            # Загрузим модель.
+            self.model_logo = tf.keras.models.load_model(model_path_logo, custom_objects={"IoU":IoU})
+            self.model_sign = tf.keras.models.load_model(model_path_sign, custom_objects={"IoU":IoU})
+           
+            self.image_operations = image_operations.ImageOperations(logger, config_patch)
+            self.orign_width = 0
+            self.orign_height = 0
 
-        self.class_names= class_names
-        print('ObjectLocalization initialize')
-        self.logger.write('ObjectLocalization initialize')
+            print('ObjectLocalization initialize')
+            self.logger.write('ObjectLocalization initialize')
+        except Exception as ex:
+            self.log.write(f'ObjectLocalization_Exception: {str(ex)}')
+
 
     def get_boxes_location(self, pred):
         '''Определим местоположение ограничивающего прямоугольника на изображении.'''
@@ -42,7 +50,6 @@ class ObjectLocalization():
             class_name = self.class_names[pred_y[0]]
         return class_name
     
-
     def predict_interpretation(self, predict, class_name):
         '''Выполняет интерпредацию предсказанного значения.'''
         position={}
@@ -50,11 +57,12 @@ class ObjectLocalization():
         if predict[0][:,0].max() > self.threshold:
 
             bbx = self.image_operations.combined_bb(predict[0], predict[1], class_name, self.threshold)   # Объединяем боксы с разных тайлов в один.
-            bbx = self.image_operations.get_original_size_bb(bbx,(self.orign_width, self.orign_height))
-            # Здесь, по идее, можно было бы создать отдельный класс и передать в него свойства. А, затем как-то его сериализовать.
-            position['type']= class_name  
-            position['position'] = {'left':bbx[0],'top':bbx[1],'width':bbx[2],'height':bbx[3]} # координаты объекта
-            position['source'] = {'width':self.orign_width, 'height': self.orign_height}
+            if (bbx[2] > self.min_object_size) and (bbx[3]> self.min_object_size): 
+                bbx = self.image_operations.get_original_size_bb(bbx,(self.orign_width, self.orign_height))
+              # Здесь, по идее, можно было бы создать отдельный класс и передать в него свойства. А, затем как-то его сериализовать.
+                position['type']= class_name  
+                position['position'] = {'left':bbx[0],'top':bbx[1],'width':bbx[2],'height':bbx[3]} # координаты объекта
+                position['source'] = {'width':self.orign_width, 'height': self.orign_height}
         return position 
 
 
@@ -62,27 +70,27 @@ class ObjectLocalization():
         '''Отправляет изображение в нейронную сеть. возвращает результат предсказания.'''
         object_list = []
         try:
-            image = np.array(image)
             # перед изменением размера необходимо запомнить изначальный размеры изображения.
-            self.orign_width, self.orign_height = image.shape[0], image.shape[1] 
-            print(image.shape[0], image.shape[1], self.target_image_size )
-            image_list = self.image_operations.image_prepare(image, self.target_image_size)
+            self.orign_width, self.orign_height = image.size 
+            image_list = self.image_operations.image_prepare(image, self.target_image_size, split_image=True)
 
-            pred = self.model_logo.predict(image_list)
+            pred = self.model_logo.predict(image_list)      
             position = self.predict_interpretation(pred, self.class_names[0])
             if position != {}:
                 object_list.append(position)
-                self.logger.write(f'{position}')
+                self.logger.write(f'logo position-{position}')
+                print(f'logo position-{position}')
 
-            image_list = self.image_operations.image_prepare(image, self.target_image_size)
             pred = self.model_sign.predict(image_list)     
             position = self.predict_interpretation(pred, self.class_names[1])
             if position != {}:
-                object_list.append(position)    
+                object_list.append(position)
+                self.logger.write(f'signature position-{position}')
+                print(f'signature position-{position}')
 
         except Exception as e:
             self.logger.write(f'Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
-            print(f'Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
+            print(f'ObjectLocalization_Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
 
         if object_list=={}:    # если словарь все еще пуст - возвращаем 'void'  
                 object_list.append({'type': 'void'})
@@ -94,16 +102,17 @@ if __name__ == "__main__":
 
     print(("Walcom to ObjectLocalization!"))
     file_dir = os.path.dirname(os.path.realpath('__file__'))
-    classes_path = os.path.join(file_dir,'models/class_names.txt')
-    model_path_logo = os.path.join(file_dir,'models/model_logo.h5')
-    model_path_sign = os.path.join(file_dir,'models/model_sign.h5')
+    # classes_path = os.path.join(file_dir,'models/class_names.txt')
+    model_path_logo = os.path.join(file_dir,'models/model_logo_resnet_100.h5')
+    model_path_sign = os.path.join(file_dir,"models/model_sign_resnet.h5",)
     loger_patch = os.path.join(file_dir,'server/log')
     img = Image.open(os.path.join(file_dir,'images/nuz52d00.tif'))
-    win_size=64
-    threshold=0.5
+    class_names = ['logo','sign']
+    win_size=224
+    threshold=0.8
     target_image_size= (600, 800)
     log = Logger(loger_patch)
-    object_localization = ObjectLocalization(model_path_logo, model_path_sign, classes_path, log, win_size, target_image_size, threshold) # Для его активации нужно настроить модель.
+    object_localization = ObjectLocalization(model_path_logo, model_path_sign, class_names, log, win_size, target_image_size, threshold) # Для его активации нужно настроить модель.
     data = object_localization.get_objects_localization(img) 
     print(f'predicted: {data}')
     # Загружаем изображение. Пытаемся определить класс к которому оно принадлежит.

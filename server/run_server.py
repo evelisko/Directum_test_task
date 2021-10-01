@@ -21,19 +21,13 @@ config_patch = "server/config.json"
 
 with open(config_patch, 'r', encoding='utf8') as f:
     config = json.load(f)
-    model_path_logo = config['model_path_logo']
-    model_path_sign = config['model_path_sign']
-    class_names = config['class_names']
-    win_size = config['win_size']
-    target_image_size = config['target_image_size']
-    threshold = config['threshold']
     loger_patch = config['loger_patch']
 
 log = Logger(loger_patch)
 log.write('Run Flask Server')
 print('Run Flask Server')
 
-object_localization = ObjectLocalization(model_path_logo, model_path_sign, class_names, logger=log, win_size=win_size, target_image_size=target_image_size, threshold=threshold) # Для его активации нужно настроить модель.
+object_localization = ObjectLocalization(config_patch, log) # Для его активации нужно настроить модель.
 
 @app.route("/", methods=["GET"])
 def general():
