@@ -78,7 +78,7 @@ pip install -r requirements.txt
 
 Вопреки требованиям задания сохранил модель в формате *.h5. Т.к. сохранении в pickle возникает ошибка. Ибо модель слишком велика для данного формата. 
 
-> Обученные модели находятся можно скачать архивом по ссылке. (Ссылка ^_^)[https://drive.google.com/file/d/14pSJHegd1rF2lgZ-Mw44a3CpogRJnm6o/view?usp=sharing]
+>:pushpin: Обученные модели находятся можно скачать архивом по ссылке. :point_right:  [Ссылка](https://drive.google.com/file/d/14pSJHegd1rF2lgZ-Mw44a3CpogRJnm6o/view?usp=sharing) :rocket:
 Распакованные файлы необходимо поместить в папку /Directum_test_task/models. 
 
 #### 6. Проверяем, что наше api работает
