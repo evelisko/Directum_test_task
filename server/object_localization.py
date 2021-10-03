@@ -5,8 +5,9 @@ import json
 import image_operations
 from PIL import Image
 import IoU
+import pickle
 
-class ObjectLocalization(): #EntityExtraction
+class ObjectLocalization():
 
     def __init__(self, config_patch, logger): # Написать стоит и други процедуры после инициализации.
         # os.environ['CUDA_VISIBLE_DEVICES'] = ''
@@ -23,10 +24,21 @@ class ObjectLocalization(): #EntityExtraction
                 self.threshold = config['obj_location_threshold']  
 
             print('Load models')
-            # Загрузим модель.
-            self.model_logo = tf.keras.models.load_model(model_path_logo, custom_objects={"IoU":IoU})
-            self.model_sign = tf.keras.models.load_model(model_path_sign, custom_objects={"IoU":IoU})
-           
+
+            # Загрузка моделей.
+            model_dict_restore={}
+            with open(model_path_logo, 'rb') as f:
+                 model_dict_restore = pickle.load(f)
+
+            self.model_logo  = tf.keras.models.model_from_json(model_dict_restore['graph'])
+            self.model_logo.set_weights(model_dict_restore['weights'])
+
+            with open(model_path_sign, 'rb') as f:
+                 model_dict_restore = pickle.load(f)
+
+            self.model_sign  = tf.keras.models.model_from_json(model_dict_restore['graph'])
+            self.model_sign.set_weights(model_dict_restore['weights'])
+   
             self.image_operations = image_operations.ImageOperations(logger, config_patch)
             self.orign_width = 0
             self.orign_height = 0
@@ -79,8 +91,8 @@ class ObjectLocalization(): #EntityExtraction
             self.logger.write(f'ObjectLocalization_Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
             print(f'ObjectLocalization_Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
 
-        if object_list==[]:    # если словарь все еще пуст - возвращаем 'void'  
-                # object_list.append({'type': 'void'})
+        if object_list==[]:  # если словарь все еще пуст - возвращаем 'void'  
+                object_list.append({'type': 'void'})
                 print('Изображение не содержит ни логотипов ни подписей')
         return object_list
     

@@ -20,7 +20,7 @@ class PageClassification():
                 self.target_image_size = config['page_classify_target_image_size']
                 print('Load models')
 
-          # Загрузим модель.
+          # Загрузка модели.
             model_dict_restore={}
             with open(model_path, 'rb') as f:
                  model_dict_restore = pickle.load(f)

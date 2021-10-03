@@ -116,8 +116,9 @@ class ImageOperations():
     def image_prepare(self, image, target_img_size, split_image=False):
         '''Подготавливает изображение к отправке его в нейронную сеть.'''
         try:
-            image = image.resize(target_img_size)
-            image  = tf.keras.preprocessing.image.img_to_array(image.convert('RGB'))
+            with tf.device('CPU'):
+                image = image.resize(target_img_size)
+                image  = tf.keras.preprocessing.image.img_to_array(image.convert('RGB'))
 
             image_list=[]
             if split_image:
