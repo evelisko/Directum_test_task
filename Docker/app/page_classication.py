@@ -68,11 +68,11 @@ if __name__ == "__main__":
     print(("Walcom to ObjectLocalization!"))
     file_dir = os.path.dirname(os.path.realpath('__file__'))
     
-    loger_patch = os.path.join(file_dir,'server/log')
-    config_patch = os.path.join(file_dir,'server/config.json')
+    loger_patch = os.path.join(file_dir,'Docker/app/log')
+    config_patch = os.path.join(file_dir,'Docker/app/config.json')
     log = Logger(loger_patch)
     with tf.device('CPU'):
         page_classify = PageClassification(config_patch, log)
-        img = Image.open(os.path.join(file_dir,'images/obh31f00_3.tif'))
+        img = Image.open(os.path.join(file_dir,'../../images/obh31f00_3.tif'))
         data = page_classify.get_page_type(img) 
     print(f'predicted: {data}')

@@ -18,7 +18,7 @@ app = Flask(__name__)
 dataframe_path = ""
 loger_patch = ""
 config = {}
-config_patch = "server/config.json"
+config_patch = "/app/app/config.json"
 
 with open(config_patch, 'r', encoding='utf8') as f:
     config = json.load(f)

@@ -102,12 +102,12 @@ if __name__ == "__main__":
     print(("Walcom to ObjectLocalization!"))
     file_dir = os.path.dirname(os.path.realpath('__file__'))
 
-    loger_patch = os.path.join(file_dir,'server/log')
-    config_patch = os.path.join(file_dir,'server/config.json')
+    loger_patch = os.path.join(file_dir,'Docker/app/log')
+    config_patch = os.path.join(file_dir,'Docker/app/config.json')
     log = Logger(loger_patch)
     object_localization = ObjectLocalization(config_patch, log)
 
-    img = Image.open(os.path.join(file_dir,'images/nuz52d00.tif'))
+    img = Image.open(os.path.join(file_dir,'../../images/nuz52d00.tif'))
     data = object_localization.get_objects_localization(img) 
     print(f'predicted: {data}')
     

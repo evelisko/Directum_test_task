@@ -8,8 +8,8 @@
 	"obj_location_threshold": 0.8,
 	"obj_location_target_image_size": [600, 800],
 	"page_classify_target_image_size": [224,224],
-	"model_patch_logo": "models/model_logo.pickle",
-	"model_patch_sign": "models/model_sign.pickle",
-	"model_patch_classification": "models/page_classify_model.pickle",
-	"loger_patch": "server/app_log.log"
+	"model_patch_logo": "./app/models/model_logo.pickle",
+	"model_patch_sign": "./app/models/model_sign.pickle",
+	"model_patch_classification": "./app/models/page_classify_model.pickle",
+	"loger_patch": "./app/models/app_log.log"
 }
