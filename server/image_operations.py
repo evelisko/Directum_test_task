@@ -2,25 +2,25 @@ import json
 import numpy as np         
 import math
 import tensorflow as tf
-from logger import Logger
 
 class ImageOperations():
 
     def __init__(self, logger, config_patch):
 
-        self.log = logger
+        self.logger = logger
         try:
             with open(config_patch, 'r', encoding='utf8') as f:
                 config = json.load(f)
-                self.class_names = config['class_names']
+                self.class_names = config['obj_location_class_names']
                 self.win_size = config['win_size']
                 self.min_object_size = config['min_object_size']
                 self.step_x = config['step_x']
                 self.step_y = config['step_y']
                 self.win_size = config['win_size']
-                self.target_img_size = config['target_image_size']
+                self.target_img_size = config['obj_location_target_image_size']
         except Exception as ex:
-            self.log.write(f'Image_operation Exception: {str(ex)}')
+            self.logger.write(f'Image_operation Exception: {str(ex)}')
+            print(f'Image_operation Exception: {str(ex)}')
        
         # Для того чтобы загнать катринку в нейронную сеть, необходимо разбить изображение на квадраты размером win_size.
         # следующие два параметра оптределяют к-во этих квадратов. 
@@ -90,7 +90,7 @@ class ImageOperations():
     def split_image(self, img, bbx=None, class_index=1):
         '''Процедура для разбиения изображения на квадраты'''
 
-        is_not_bbx =False
+        is_not_bbx=False
         if not bbx:
             is_not_bbx=True
             bbx = np.array([-1,-1,-1,-1], dtype='float')
@@ -124,9 +124,9 @@ class ImageOperations():
                 print("split image")
                 image_list = self.split_image(image) # Разбиваем изображение на тайлы.
    
-        except Exception as e:
-            # self.log.write(f'Exception: Возникла ошибка на этапе предобработки изображения. {str(e)}')
-            print(f'Image_operation Exception: Возникла ошибка на этапе предобработки изображения. {str(e)}')
+        except Exception as ex:
+            self.logger.write(f'Image_operation Exception: Возникла ошибка на этапе предобработки изображения. {str(ex)}')
+            print(f'Image_operation Exception: Возникла ошибка на этапе предобработки изображения. {str(ex)}')
     
         return image_list if split_image else image    
 

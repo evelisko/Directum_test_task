@@ -1,27 +1,27 @@
 import tensorflow as tf
 from logger import Logger
-# import numpy as np
 import os
 import json
 import image_operations
 from PIL import Image
 import IoU
 
-class ObjectLocalization():
+class ObjectLocalization(): #EntityExtraction
 
     def __init__(self, config_patch, logger): # Написать стоит и други процедуры после инициализации.
-        os.environ['CUDA_VISIBLE_DEVICES'] = ''
+        # os.environ['CUDA_VISIBLE_DEVICES'] = ''
         self.logger = logger
         try:
             
             with open(config_patch, 'r', encoding='utf8') as f:
                 config = json.load(f)
-                self.class_names = config['class_names']
+                self.class_names = config['obj_location_class_names']
                 model_path_logo = config['model_patch_logo']
                 model_path_sign = config['model_patch_sign']
-                self.target_image_size = config['target_image_size']
+                self.target_image_size = config['obj_location_target_image_size']
                 self.min_object_size = config['min_object_size']
-                self.threshold = config['threshold']  
+                self.threshold = config['obj_location_threshold']  
+
             print('Load models')
             # Загрузим модель.
             self.model_logo = tf.keras.models.load_model(model_path_logo, custom_objects={"IoU":IoU})
@@ -34,22 +34,9 @@ class ObjectLocalization():
             print('ObjectLocalization initialize')
             self.logger.write('ObjectLocalization initialize')
         except Exception as ex:
-            self.log.write(f'ObjectLocalization_Exception: {str(ex)}')
+            self.logger.write(f'ObjectLocalization_Exception: {str(ex)}')
 
-
-    def get_boxes_location(self, pred):
-        '''Определим местоположение ограничивающего прямоугольника на изображении.'''
-        class_name = ''
-        max_value = pred.max()
-        print(max_value)
-        if max_value < self.threshold:
-            class_name='void' # изображение не содержит ни логотипов ни подписей.
-        else:
-            # Загрузим изображение.
-            pred_y = tf.argmax(pred, axis=1, output_type=tf.int32)
-            class_name = self.class_names[pred_y[0]]
-        return class_name
-    
+  
     def predict_interpretation(self, predict, class_name):
         '''Выполняет интерпредацию предсказанного значения.'''
         position={}
@@ -89,11 +76,11 @@ class ObjectLocalization():
                 print(f'signature position-{position}')
 
         except Exception as e:
-            self.logger.write(f'Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
+            self.logger.write(f'ObjectLocalization_Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
             print(f'ObjectLocalization_Exception: Ошибка интерпретации модели! Не удалось выполнить предскание. {str(e)}')
 
-        if object_list=={}:    # если словарь все еще пуст - возвращаем 'void'  
-                object_list.append({'type': 'void'})
+        if object_list==[]:    # если словарь все еще пуст - возвращаем 'void'  
+                # object_list.append({'type': 'void'})
                 print('Изображение не содержит ни логотипов ни подписей')
         return object_list
     
@@ -102,17 +89,13 @@ if __name__ == "__main__":
 
     print(("Walcom to ObjectLocalization!"))
     file_dir = os.path.dirname(os.path.realpath('__file__'))
-    # classes_path = os.path.join(file_dir,'models/class_names.txt')
-    model_path_logo = os.path.join(file_dir,'models/model_logo_resnet_100.h5')
-    model_path_sign = os.path.join(file_dir,"models/model_sign_resnet.h5",)
+
     loger_patch = os.path.join(file_dir,'server/log')
-    img = Image.open(os.path.join(file_dir,'images/nuz52d00.tif'))
-    class_names = ['logo','sign']
-    win_size=224
-    threshold=0.8
-    target_image_size= (600, 800)
+    config_patch = os.path.join(file_dir,'server/config.json')
     log = Logger(loger_patch)
-    object_localization = ObjectLocalization(model_path_logo, model_path_sign, class_names, log, win_size, target_image_size, threshold) # Для его активации нужно настроить модель.
+    object_localization = ObjectLocalization(config_patch, log)
+
+    img = Image.open(os.path.join(file_dir,'images/nuz52d00.tif'))
     data = object_localization.get_objects_localization(img) 
     print(f'predicted: {data}')
-    # Загружаем изображение. Пытаемся определить класс к которому оно принадлежит.
+    

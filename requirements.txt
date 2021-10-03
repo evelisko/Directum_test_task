@@ -8,6 +8,7 @@ tensorflow==2.5.0
 requests==2.26.0
 Flask==2.0.1
 Flask-WTF==0.15.1
+pickle
 logger
 certifi==2020.4.5.1
 chardet==3.0.4

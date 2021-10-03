@@ -9,9 +9,10 @@ import os
 from flask import request, jsonify, Flask, redirect
 from logger import Logger
 from object_localization import ObjectLocalization
+from page_classication import PageClassification
 from PIL import Image 
 
-
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 app = Flask(__name__)
     
 dataframe_path = ""
@@ -28,6 +29,7 @@ log.write('Run Flask Server')
 print('Run Flask Server')
 
 object_localization = ObjectLocalization(config_patch, log) # Для его активации нужно настроить модель.
+page_classify = PageClassification(config_patch, log) # Для его активации нужно настроить модель.
 
 @app.route("/", methods=["GET"])
 def general():
@@ -57,9 +59,13 @@ def netflix_films():
             if request_json["method"]:
                 method_name = request_json["method"]
                 print("method_name: ",method_name)
+#----------------------------------------------------------------------------                
                 if method_name == "object_localization":
-                    data["object_localization"] = object_localization.get_objects_localization(Image.open(img)) # Возвращаем результат классификации
-               
+                    data["object_localization"] = object_localization.get_objects_localization(Image.open(img))
+#----------------------------------------------------------------------------
+                if method_name == "page_cassify":
+                    data["page_cassify"] = page_classify.get_page_type(Image.open(img))
+#----------------------------------------------------------------------------
                 print(f'data: {data}')
         except Exception as e:
             log.write(f'Exception: {str(e)}')

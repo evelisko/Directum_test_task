@@ -1,12 +1,15 @@
 {
-	"class_names": ["logo", "sign"],
+	"obj_location_class_names": ["logo", "sign"],
+	"page_classify_class_names": ["other", "main"],
 	"win_size": 224,
 	"step_x": 100,
 	"step_y": 100,
 	"min_object_size": 20,
-	"target_image_size": [600, 800],
-	"threshold": 0.8,
+	"obj_location_threshold": 0.8,
+	"obj_location_target_image_size": [600, 800],
+	"page_classify_target_image_size": [224,224],
 	"model_patch_logo": "models/model_logo.h5",
 	"model_patch_sign": "models/model_sign.h5",
+	"model_patch_classification": "models/page_classify_model.pickle",
 	"loger_patch": "server/app_log.log"
 }
