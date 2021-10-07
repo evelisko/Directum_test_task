@@ -40,7 +40,7 @@ def general():
 
 # Здесь выполним обработку POST/GET запроса.
 @app.route("/service", methods=["POST", "GET"])
-def netflix_films():
+def doc_analizer():
     data = {"success": False}
     if request.method == "POST":
         try:
