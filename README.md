@@ -127,7 +127,7 @@ $ docker build -t doc_analizer .
 #### 4. Запустить docker - контейнер
 
 ``` bash
- docker run -d -p 8180:8180 -p 8181:8181 -v <your path>/Directum_test_task/models:/app/app/models doc_analizer
+ docker run -d -p 8180:8180 -p 8181:8181 -v  /home/sergey/Projects/Directum_test_task/models:/app/app/models doc_analizer
 ```
 
 #### 5. Проверить что контейнер запущен -
